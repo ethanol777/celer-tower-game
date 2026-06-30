@@ -9,14 +9,36 @@ import {
 import { addFlight } from './flight'
 import * as constant from './constant'
 
+/**
+ * 每帧绘制 HUD（生命值、分数、楼层、连击）
+ * Phase 1 改造：补充连击显示和完美落地闪光特效
+ */
 export const endAnimate = (engine) => {
   const gameStartNow = engine.getVariable(constant.gameStartNow)
   if (!gameStartNow) return
+
   const successCount = engine.getVariable(constant.successCount, 0)
   const failedCount = engine.getVariable(constant.failedCount)
   const gameScore = engine.getVariable(constant.gameScore, 0)
+  const perfectCount = engine.getVariable(constant.perfectCount, 0)
   const threeFiguresOffset = Number(successCount) > 99 ? engine.width * 0.1 : 0
 
+  // ── 完美落地闪光特效 ──
+  const flash = engine.getVariable(constant.perfectFlash)
+  if (flash) {
+    const elapsed = Date.now() - flash.time
+    if (elapsed < 300) {
+      const alpha = (1 - elapsed / 300) * 0.45
+      engine.ctx.save()
+      engine.ctx.fillStyle = `rgba(255, 240, 80, ${alpha})`
+      engine.ctx.fillRect(0, 0, engine.width, engine.height)
+      engine.ctx.restore()
+    } else {
+      engine.setVariable(constant.perfectFlash, null)
+    }
+  }
+
+  // ── 楼层（左上角） ──
   drawYellowString(engine, {
     string: 'F',
     size: engine.width * 0.06,
@@ -31,6 +53,8 @@ export const endAnimate = (engine) => {
     y: engine.width * 0.2,
     textAlign: 'right'
   })
+
+  // ── 分数（右上角） ──
   const score = engine.getImg('score')
   const scoreWidth = score.width
   const scoreHeight = score.height
@@ -50,13 +74,30 @@ export const endAnimate = (engine) => {
     y: engine.width * 0.095,
     textAlign: 'right'
   })
+
+  // ── 连击提示（分数下方，连击>=2时显示） ──
+  if (perfectCount >= 2) {
+    const { ctx } = engine
+    ctx.save()
+    ctx.font = `bold ${engine.width * 0.038}px Arial, sans-serif`
+    ctx.fillStyle = '#FFD700'
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'
+    ctx.lineWidth = 2
+    ctx.textAlign = 'right'
+    const comboStr = `🔥 ×${perfectCount} COMBO`
+    ctx.strokeText(comboStr, engine.width * 0.96, engine.width * 0.135)
+    ctx.fillText(comboStr, engine.width * 0.96, engine.width * 0.135)
+    ctx.restore()
+  }
+
+  // ── 生命值心形图标（右侧中部，已扣变灰） ──
   const { ctx } = engine
   const heart = engine.getImg('heart')
   const heartWidth = heart.width
   const heartHeight = heart.height
   const zoomedHeartWidth = engine.width * 0.08
   const zoomedHeartHeight = (heartHeight * zoomedHeartWidth) / heartWidth
-  for (let i = 1; i <= 3; i += 1) {
+  for (let i = 1; i <= constant.maxLives; i += 1) {
     ctx.save()
     if (i <= failedCount) {
       ctx.globalAlpha = 0.2
@@ -72,9 +113,13 @@ export const endAnimate = (engine) => {
   }
 }
 
+/**
+ * 每帧主循环：生成新积木、触发装饰动画
+ */
 export const startAnimate = (engine) => {
   const gameStartNow = engine.getVariable(constant.gameStartNow)
   if (!gameStartNow) return
+
   const lastBlock = engine.getInstance(`block_${engine.getVariable(constant.blockCount)}`)
   if (!lastBlock || [constant.land, constant.out].indexOf(lastBlock.status) > -1) {
     if (checkMoveDown(engine) && getMoveDownValue(engine)) return
@@ -94,6 +139,7 @@ export const startAnimate = (engine) => {
     })
     engine.addInstance(block)
   }
+
   const successCount = Number(engine.getVariable(constant.successCount, 0))
   switch (successCount) {
     case 2:
@@ -121,4 +167,3 @@ export const startAnimate = (engine) => {
       break
   }
 }
-

@@ -7,6 +7,23 @@ export const failedCount = 'FAILED_COUNT'
 export const perfectCount = 'PERFECT_COUNT'
 export const gameScore = 'GAME_SCORE'
 
+// 生命值系统
+export const maxLives = 3
+export const reviveCount = 'REVIVE_COUNT'
+export const reviveCoins = 'REVIVE_COINS'
+export const maxRevivePerGame = 2
+
+// 难度修正：记录最近N块的失误情况
+export const recentBlocks = 'RECENT_BLOCKS'
+export const recentBlocksWindow = 10
+
+// 游戏阶段（用于AI背景切换）
+export const gamePhase = 'GAME_PHASE' // day / dusk / night / star
+
+// 结算/UI 状态
+export const gameOver = 'GAME_OVER'
+export const perfectFlash = 'PERFECT_FLASH'
+
 export const hookDown = 'HOOK_DOWN'
 export const hookUp = 'HOOK_UP'
 export const hookNormal = 'HOOK_NORMAL'

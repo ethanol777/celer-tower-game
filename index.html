@@ -485,6 +485,10 @@
     height: gameHeight,
     canvasId: 'canvas',
     soundOn: true,
+    // AI 配置（Mock 模式，不调真实 API）
+    aiMock: true,
+    // aiEndpoint: 'https://your-ai-api.example.com/generate',
+    // aiKey: 'your-api-key',
     setGameScore: function (s) {
       score = s
     },
@@ -492,8 +496,14 @@
       successCount = s
     },
     setGameFailed: function (f) {
+      // 注意：真正的结算页由 onGameOver 回调（settlement.js）处理
+      // 这里只做旧 UI 兼容（如果不需要可移除）
       $('#score').text(score)
-      if (f >= 3) overShowOver()
+    },
+    onGameOver: function (stats) {
+      // 结算页由 settlement.js 的 showSettlementPage 处理
+      // 此回调可用于额外的外部埋点等
+      console.log('[Game Over]', stats)
     }
   }
 
